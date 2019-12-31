@@ -1,0 +1,15 @@
+[package]
+name = "glium-ui"
+version = "0.1.0"
+authors = ["radviger@gmail.com"]
+edition = "2018"
+
+[dependencies]
+glium = "0.26.0-alpha5"
+rusttype = "0.8.2"
+cgmath = "0.17.0"
+image = "0.23.0-preview.0"
+alto = "3.0.4"
+audrey = "0.2.0"
+clipboard = "0.5.0"
+winit = "0.20.0-alpha5"
