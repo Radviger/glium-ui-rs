@@ -3,7 +3,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::time::{SystemTime, Instant, Duration};
 use image::{DynamicImage, GenericImageView};
-use winit::window::{WindowBuilder, Icon};
+//use winit::window::{WindowBuilder, Icon};
 use crate::shader::ShaderManager;
 use crate::font::FontManager;
 use crate::texture::TextureManager;
