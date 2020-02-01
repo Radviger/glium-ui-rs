@@ -16,12 +16,12 @@ macro_rules! texture {
     ($manager:expr, $name:literal) => {{
         static IMAGE_BUF: &'static [u8] = include_bytes!(concat!("resources/", $name, ".png"));
         let manager = $manager;
-        let image = image::load_from_memory_with_format(&IMAGE_BUF, image::ImageFormat::PNG)
+        let image = crate::image::load_from_memory_with_format(&IMAGE_BUF, crate::image::ImageFormat::PNG)
             .expect("Image loading failed");
         let size = image.dimensions();
-        let image = glium::texture::RawImage2d::from_raw_rgba(image.raw_pixels(), size);
-        let texture = glium::texture::SrgbTexture2d::new(manager.display, image).expect("Texture allocation failed");
-        manager.textures.insert($name.into(), Rc::new(Box::new(texture)));
+        let image = crate::glium::texture::RawImage2d::from_raw_rgba(image.raw_pixels(), size);
+        let texture = crate::glium::texture::SrgbTexture2d::new(manager.display, image).expect("Texture allocation failed");
+        manager.textures.insert($name.into(), std::rc::Rc::new(Box::new(texture)));
     }};
 }
 

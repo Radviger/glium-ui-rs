@@ -7,7 +7,7 @@ use std::collections::HashMap;
 #[macro_export]
 macro_rules! shader {
     ($display:expr, $name:literal) => {{
-        use glium::program::Program;
+        use crate::glium::program::Program;
         Program::from_source($display,
             &include_str!(concat!("resources/shaders/", $name, ".vsh")),
             &include_str!(concat!("resources/shaders/", $name, ".fsh")),
