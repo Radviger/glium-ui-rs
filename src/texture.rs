@@ -14,9 +14,10 @@ pub struct TextureManager {
 #[macro_export]
 macro_rules! texture {
     ($manager:expr, $name:literal) => {{
+        use crate::image::{self, GenericImageView};
         static IMAGE_BUF: &'static [u8] = include_bytes!(concat!("resources/", $name, ".png"));
         let manager = $manager;
-        let image = crate::image::load_from_memory_with_format(&IMAGE_BUF, crate::image::ImageFormat::PNG)
+        let image = image::load_from_memory_with_format(&IMAGE_BUF, image::ImageFormat::Png)
             .expect("Image loading failed");
         let size = image.dimensions();
         let image = crate::glium::texture::RawImage2d::from_raw_rgba(image.raw_pixels(), size);
