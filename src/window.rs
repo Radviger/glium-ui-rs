@@ -14,6 +14,10 @@ use glium::backend::glutin::glutin::ContextBuilder;
 use winit::monitor::MonitorHandle;
 use std::collections::VecDeque;
 use winit::platform::desktop::EventLoopExtDesktop;
+#[cfg(windows)]
+use winit::platform::windows::EventLoopExtWindows;
+#[cfg(not(windows))]
+use winit::platform::unix::EventLoopExtUnix;
 
 pub struct Window;
 
@@ -24,8 +28,7 @@ impl Window {
 
         let (window_w, window_h) = size.into();
 
-
-        let mut event_loop = EventLoop::new();
+        let mut event_loop = EventLoop::new_any_thread();
         let mut wb = WindowBuilder::new()
             .with_decorations(decorated)
             .with_title(title)
@@ -77,7 +80,7 @@ impl Window {
 
         listener.on_created(&display);
 
-        event_loop.run_return(move |event, _, control_flow| {
+        event_loop.run_return(move |event: Event<()>, _, control_flow| {
             if listener.is_closed(&display) {
                 *control_flow = ControlFlow::Exit;
                 return;
