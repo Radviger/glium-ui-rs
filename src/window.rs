@@ -115,7 +115,7 @@ impl Window {
                     display.clone(), shaders.clone(), fonts.clone(), textures.clone(), frame
                 );
 
-                listener.on_frame_draw(&mut canvas, partial_ticks);
+                listener.on_frame_draw(&mut canvas, mouse, partial_ticks);
 
                 let dimensions = canvas.dimensions();
 
@@ -162,7 +162,7 @@ pub trait WindowListener {
     fn load_resources(&self, display: &Display, shaders: Rc<RefCell<ShaderManager>>, fonts: Rc<RefCell<FontManager>>, textures: Rc<RefCell<TextureManager>>) {}
     fn on_created(&mut self, display: &Display) {}
     fn on_frame_update(&mut self, display: &Display, dimensions: (f32, f32), mouse: (f32, f32), partial_ticks: f32) {}
-    fn on_frame_draw(&self, canvas: &mut Canvas<Frame>, partial_ticks: f32);
+    fn on_frame_draw(&self, canvas: &mut Canvas<Frame>, mouse_pos: (f32, f32), partial_ticks: f32);
     fn on_close_requested(&mut self, display: &Display, dimensions: (f32, f32)) {}
     fn on_focused(&mut self, display: &Display, dimensions: (f32, f32), focused: bool) {}
     fn on_keyboard_char(&mut self, display: &Display, dimensions: (f32, f32), ch: char) {}

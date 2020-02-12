@@ -678,7 +678,7 @@ impl WindowListener for Notification {
         ));
     }
 
-    fn on_frame_draw(&self, canvas: &mut Canvas<Frame>, partial_ticks: f32) {
+    fn on_frame_draw(&self, canvas: &mut Canvas<Frame>, mouse_pos: (f32, f32), partial_ticks: f32) {
         canvas.clear((1.0, 1.0, 1.0, 1.0), 1.0);
         canvas.text(&self.message, self.size.0 as f32 / 2.0, 10.0, TextAlign::Center, &Default::default());
         self.widgets.draw(canvas, partial_ticks);
@@ -799,7 +799,7 @@ impl WindowListener for Query {
         ));
     }
 
-    fn on_frame_draw(&self, canvas: &mut Canvas<Frame>, partial_ticks: f32) {
+    fn on_frame_draw(&self, canvas: &mut Canvas<Frame>, mouse_pos: (f32, f32), partial_ticks: f32) {
         canvas.clear((1.0, 1.0, 1.0, 1.0), 1.0);
 
         self.widgets.draw(canvas, partial_ticks);
