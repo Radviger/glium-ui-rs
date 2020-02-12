@@ -201,6 +201,7 @@ impl FontManager {
     pub fn supported_chars() -> impl Iterator<Item=char> {
         vec!['•' as u32].into_iter()
             .chain(0 .. 0x7f+1)
+            .chain(0x370 .. 0x3FF+1)
             .chain(0x400 .. 0x4ff+1)
             .filter_map(std::char::from_u32)
     }
