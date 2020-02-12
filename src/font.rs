@@ -254,9 +254,9 @@ impl FontManager {
         }
     }
 
-    pub fn get_string_bounds(&mut self, text: &String, params: &FontParameters) -> (f32, f32) {
+    pub fn get_string_bounds(&mut self, text: &str, params: &FontParameters) -> (f32, f32) {
         let texture = self.get_or_load_texture(params.size, Self::supported_chars());
-        let text = TextDisplay::new(&self.system, &*texture, text.as_ref());
+        let text = TextDisplay::new(&self.system, &*texture, text);
         let em = params.size as f32 / 2.0;
         (text.get_width() * em, text.get_height() * em)
     }

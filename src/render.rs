@@ -390,35 +390,30 @@ impl<S> Canvas<S> where S: Surface {
     pub fn get_text_size<T>(&self, text: T, params: &FontParameters) -> (f32, f32) where T: AsRef<str> {
         let fonts = self.fonts();
         let mut fonts = fonts.borrow_mut();
-        let text = text.as_ref();
-        fonts.get_string_bounds(&String::from(text), params)
+        fonts.get_string_bounds(text.as_ref(), params)
     }
 
-    pub fn text<T>(&mut self, text: T, x: f32, y: f32, align: TextAlign, params: &FontParameters)
+    pub fn text<T>(&mut self, text: T, x: f32, y: f32, align_h: TextAlignHorizontal, align_v: TextAlignVertical, params: &FontParameters)
         where T: AsRef<str> {
 
-        let fonts = self.fonts();
+        let text = text.as_ref();
+        let viewport = self.viewport();
+        let fonts = self.fonts().clone();
+        let mut fonts = fonts.borrow_mut();
+        let (w, h) = fonts.get_string_bounds(text, params);
 
-        match align {
-            TextAlign::Left => {
-                let viewport = self.viewport();
-                fonts.borrow_mut().draw_string(&mut self.target, text, x, y, viewport, params);
-            },
-            TextAlign::Right => {
-                let mut fonts = fonts.borrow_mut();
-                let text = text.as_ref();
-                let viewport = self.viewport();
-                let (w, h) = fonts.get_string_bounds(&String::from(text), params);
-                fonts.draw_string(&mut self.target, text, x - w, y, viewport, params);
-            },
-            TextAlign::Center => {
-                let mut fonts = fonts.borrow_mut();
-                let text = text.as_ref();
-                let viewport = self.viewport();
-                let (w, h) = fonts.get_string_bounds(&String::from(text), params);
-                fonts.draw_string(&mut self.target, text, x - w / 2.0, y, viewport, params);
-            }
-        }
+        let x = match align_h {
+            TextAlignHorizontal::Left => x,
+            TextAlignHorizontal::Right => x - w,
+            TextAlignHorizontal::Center => x - w / 2.0
+        };
+        let y = match align_v {
+            TextAlignVertical::Top => y,
+            TextAlignVertical::Bottom => y - h,
+            TextAlignVertical::Center => y - h / 2.0
+        };
+
+        fonts.draw_string(&mut self.target, text, x, y, viewport, params);
     }
 
     pub fn into_inner(self) -> S {
@@ -426,6 +421,10 @@ impl<S> Canvas<S> where S: Surface {
     }
 }
 
-pub enum TextAlign {
+pub enum TextAlignHorizontal {
     Left, Right, Center
+}
+
+pub enum TextAlignVertical {
+    Top, Bottom, Center
 }
