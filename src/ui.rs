@@ -188,9 +188,6 @@ pub enum Background {
 impl Background {
     pub fn draw<S>(&self, canvas: &mut Canvas<S>, bounds: [f32; 4], partial_ticks: f32) where S: Surface {
         let viewport: [[f32; 4]; 4] = canvas.viewport().into();
-        let uniforms = uniform! {
-            mat: viewport
-        };
         let params = DrawParameters {
             blend: Blend::alpha_blending(),
             .. Default::default()
@@ -199,10 +196,17 @@ impl Background {
             Background::Texture(texture) => {
                 let texture = canvas.textures().borrow().get(texture);
                 let program = canvas.shaders().borrow().textured();
+                let uniforms = uniform! {
+                    mat: viewport,
+                    tex: texture.sampled()
+                };
                 canvas.textured_rect(bounds, [1.0; 4], &program, &uniforms, &params);
             },
             Background::Color(color) => {
                 let program = canvas.shaders().borrow().default();
+                let uniforms = uniform! {
+                    mat: viewport
+                };
                 canvas.rect(bounds, *color, &program, &uniforms, &params);
             },
         }
