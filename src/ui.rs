@@ -4,8 +4,8 @@ use glium::glutin::window::CursorIcon;
 
 use clipboard::{ClipboardProvider, ClipboardContext};
 
-use crate::render::{Canvas, Vertex, TextAlignHorizontal, TextAlignVertical};
-use crate::font::FontParameters;
+use crate::render::{Canvas, Vertex};
+use crate::font::{FontParameters, TextAlignVertical, TextAlignHorizontal};
 use crate::window::{WindowListener, Window};
 use image::DynamicImage;
 use std::thread::JoinHandle;
@@ -303,8 +303,10 @@ impl<S> Widget<S> for Button where S: Surface {
         let bounds = [x, y, w, h];
         let background = if self.hover { &self.background_hover } else { &self.background_normal };
         background.draw(canvas, bounds, partial_ticks);
-        canvas.text(&self.label, x + w / 2.0, y + 4.0, TextAlignHorizontal::Center, TextAlignVertical::Center, &FontParameters {
+        canvas.text(&self.label, x + w / 2.0, y + 4.0, &FontParameters {
             color: [1.0; 4],
+            align_horizontal: TextAlignHorizontal::Left,
+            align_vertical: TextAlignVertical::Center,
             .. Default::default()
         });
     }
@@ -458,15 +460,12 @@ impl<S> Widget<S> for TextField where S: Surface {
             }
             text_w = canvas.get_text_size(&text, &Default::default()).0;
         }
-        let font_params = if self.value.is_empty() {
-            FontParameters {
-                color: [0.2, 0.2, 0.2, 1.0],
-                .. Default::default()
-            }
-        } else {
-            Default::default()
+        let font_params = FontParameters {
+            color: if self.value.is_empty() { [0.2, 0.2, 0.2, 1.0] } else { [1.0; 4] },
+            align_vertical: TextAlignVertical::Center,
+            .. Default::default()
         };
-        canvas.text(text, x + 5.0, y + 4.0, TextAlignHorizontal::Left, TextAlignVertical::Center, &font_params);
+        canvas.text(text, x + 5.0, y + 4.0, &font_params);
     }
 }
 
@@ -680,7 +679,7 @@ impl WindowListener for Notification {
 
     fn on_frame_draw(&self, canvas: &mut Canvas<Frame>, mouse_pos: (f32, f32), partial_ticks: f32) {
         canvas.clear((1.0, 1.0, 1.0, 1.0), 1.0);
-        canvas.text(&self.message, self.size.0 as f32 / 2.0, 10.0, TextAlignHorizontal::Center, TextAlignVertical::Top, &Default::default());
+        canvas.text(&self.message, self.size.0 as f32 / 2.0, 10.0, &Default::default());
         self.widgets.draw(canvas, partial_ticks);
     }
 

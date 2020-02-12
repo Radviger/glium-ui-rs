@@ -164,7 +164,9 @@ pub struct FontParameters {
     pub italic: bool,
     pub strikeout: bool,
     pub underline: bool,
-    pub scissor: Option<GLRect>
+    pub scissor: Option<GLRect>,
+    pub align_horizontal: TextAlignHorizontal,
+    pub align_vertical: TextAlignVertical
 }
 
 impl Default for FontParameters {
@@ -172,7 +174,9 @@ impl Default for FontParameters {
         FontParameters {
             size: DEFAULT_FONT_SIZE, width_limit: ::std::usize::MAX,
             color: [0.0, 0.0, 0.0, 1.0], bold: false, italic: false, underline: false, strikeout: false,
-            scissor: None
+            scissor: None,
+            align_horizontal: TextAlignHorizontal::Center,
+            align_vertical: TextAlignVertical::Top
         }
     }
 }
@@ -243,6 +247,17 @@ impl FontManager {
         let texture = self.get_or_load_texture(params.size, Self::supported_chars());
 
         for (i, text) in lines.into_iter().enumerate() {
+            let (w, h) = self.get_string_bounds(&text, params);
+            let x = match params.align_horizontal {
+                TextAlignHorizontal::Left => x,
+                TextAlignHorizontal::Right => x - w,
+                TextAlignHorizontal::Center => x - w / 2.0
+            };
+            let y = match params.align_vertical {
+                TextAlignVertical::Top => y,
+                TextAlignVertical::Bottom => y - h,
+                TextAlignVertical::Center => y - h / 2.0
+            };
             let mat = viewport
                 * Matrix4::from_translation(Vector3::new(x, y + params.size as f32 / 2.0 * (i as f32 + 0.777777775), 0.0))
                 * Matrix4::from_scale(params.size as f32 / 2.0);
@@ -807,4 +822,14 @@ fn get_nearest_po2(mut x: u32) -> u32 {
     x = x | (x >> 8);
     x = x | (x >> 16);
     x + 1
+}
+
+#[derive(Clone)]
+pub enum TextAlignHorizontal {
+    Left, Right, Center
+}
+
+#[derive(Clone)]
+pub enum TextAlignVertical {
+    Top, Bottom, Center
 }

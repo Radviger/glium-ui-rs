@@ -393,25 +393,13 @@ impl<S> Canvas<S> where S: Surface {
         fonts.get_string_bounds(text.as_ref(), params)
     }
 
-    pub fn text<T>(&mut self, text: T, x: f32, y: f32, align_h: TextAlignHorizontal, align_v: TextAlignVertical, params: &FontParameters)
+    pub fn text<T>(&mut self, text: T, x: f32, y: f32, params: &FontParameters)
         where T: AsRef<str> {
 
         let text = text.as_ref();
         let viewport = self.viewport();
         let fonts = self.fonts().clone();
         let mut fonts = fonts.borrow_mut();
-        let (w, h) = fonts.get_string_bounds(text, params);
-
-        let x = match align_h {
-            TextAlignHorizontal::Left => x,
-            TextAlignHorizontal::Right => x - w,
-            TextAlignHorizontal::Center => x - w / 2.0
-        };
-        let y = match align_v {
-            TextAlignVertical::Top => y,
-            TextAlignVertical::Bottom => y - h,
-            TextAlignVertical::Center => y - h / 2.0
-        };
 
         fonts.draw_string(&mut self.target, text, x, y, viewport, params);
     }
@@ -419,12 +407,4 @@ impl<S> Canvas<S> where S: Surface {
     pub fn into_inner(self) -> S {
         self.target
     }
-}
-
-pub enum TextAlignHorizontal {
-    Left, Right, Center
-}
-
-pub enum TextAlignVertical {
-    Top, Bottom, Center
 }
