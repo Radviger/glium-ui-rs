@@ -462,7 +462,7 @@ impl<S> Widget<S> for TextField where S: Surface {
         }
         let font_params = FontParameters {
             color: if self.value.is_empty() { [0.2, 0.2, 0.2, 1.0] } else { [1.0; 4] },
-            align_horizontal: TextAlignHorizontal::Center,
+            align_horizontal: TextAlignHorizontal::Left,
             align_vertical: TextAlignVertical::Center,
             .. Default::default()
         };
