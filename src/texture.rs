@@ -53,9 +53,9 @@ impl TextureManager {
                 _ => false
             };
             let image: RawImage2d<u8> = if has_alpha {
-                RawImage2d::from_raw_rgba(image.raw_pixels(), size)
+                RawImage2d::from_raw_rgba(image.to_rgba().into_raw(), size)
             } else {
-                RawImage2d::from_raw_rgb(image.raw_pixels(), size)
+                RawImage2d::from_raw_rgb(image.to_rgb().into_raw(), size)
             };
             let texture = SrgbTexture2d::new(&self.display, image).expect("Texture allocation failed");
             self.textures.insert(name.clone(), Rc::new(Box::new(texture)));

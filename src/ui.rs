@@ -379,7 +379,7 @@ impl<S> Widget<S> for TextField where S: Surface {
                 Some(VirtualKeyCode::Escape) => { self.focused = false; },
                 Some(VirtualKeyCode::Delete) => { self.value.clear(); },
                 Some(VirtualKeyCode::V) => {
-                    if modifiers.ctrl {
+                    if modifiers.ctrl() {
                         let mut clipboard: ClipboardContext = ClipboardProvider::new().expect("Failed to access clipboard");
                         let contents = clipboard.get_contents().expect("Failed to get clipboard contents");
                         self.value.push_str(&contents);

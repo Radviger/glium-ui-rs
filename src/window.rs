@@ -18,6 +18,7 @@ use winit::platform::desktop::EventLoopExtDesktop;
 use winit::platform::windows::EventLoopExtWindows;
 #[cfg(not(windows))]
 use winit::platform::unix::EventLoopExtUnix;
+use winit::dpi::{LogicalSize, PhysicalSize, Position, LogicalPosition};
 
 pub struct Window;
 
@@ -35,11 +36,11 @@ impl Window {
             .with_resizable(resizable) //Stupid winit warning about Xfce bug
             .with_always_on_top(top)
             .with_visible(false)
-            .with_inner_size((window_w, window_h).into());
+            .with_inner_size(LogicalSize::new(window_w, window_h));
 
         if cfg!(not(windows)) && !resizable {
-            wb = wb.with_min_inner_size((window_w, window_h).into())
-                .with_max_inner_size((window_w, window_h).into());
+            wb = wb.with_min_inner_size(LogicalSize::new(window_w, window_h))
+                .with_max_inner_size(LogicalSize::new(window_w, window_h));
         }
 
         if let Some(icon) = icon {
@@ -68,9 +69,10 @@ impl Window {
             let window: &winit::window::Window = gl_window.window();
             listener.load_resources(&display, shaders.clone(), fonts.clone(), textures.clone());
             window.set_visible(true);
-            window.set_outer_position(
-                (monitor_w / 2.0 - window_w as f64 / 2.0, monitor_h / 2.0 - window_h as f64 / 2.0).into()
-            );
+            window.set_outer_position(LogicalPosition::new(
+                monitor_w / 2.0 - window_w as f64 / 2.0,
+                monitor_h / 2.0 - window_h as f64 / 2.0
+            ));
         }
 
         let mut events = VecDeque::new();
@@ -93,7 +95,9 @@ impl Window {
                     }
                 },
                 other => {
-                    events.push_back(other);
+                    if let Some(event) = other.to_static() {
+                        events.push_back(event);
+                    }
                     false
                 }
             };
@@ -101,12 +105,11 @@ impl Window {
                 let frame = display.draw();
 
                 let (w, h) = frame.get_dimensions();
-                let dpi = display.gl_window().window().hidpi_factor() as f32;
 
                 let elapsed = SystemTime::now().duration_since(last_frame_time).expect("Error calculating frame time");
                 let partial_ticks = (elapsed.as_millis() as f64 / tps as f64) as f32;
 
-                listener.on_frame_update(&display, (w as f32 / dpi, h as f32 / dpi), mouse, partial_ticks);
+                listener.on_frame_update(&display, (w as f32, h as f32), mouse, partial_ticks);
 
                 let mut canvas = Canvas::new(
                     display.clone(), shaders.clone(), fonts.clone(), textures.clone(), frame
@@ -136,7 +139,6 @@ impl Window {
                                     listener.on_mouse_wheel(&display, dimensions, delta),
                                 WindowEvent::CursorMoved { position, .. } => {
                                     let (mouse_x, mouse_y): (f64, f64) = position.into();
-                                    let dpi = display.gl_window().window().hidpi_factor() as f32;
                                     mouse = (mouse_x as f32, mouse_y as f32);
                                     listener.on_mouse_move(&display, dimensions, mouse);
                                 }

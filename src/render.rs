@@ -280,12 +280,7 @@ impl<S> Canvas<S> where S: Surface {
 
     pub fn dimensions(&self) -> (f32, f32) {
         let (w, h) = self.target.get_dimensions();
-        let dpi = self.dpi();
-        (w as f32 / dpi, h as f32 / dpi)
-    }
-
-    pub fn dpi(&self) -> f32 {
-        self.display.gl_window().window().hidpi_factor() as f32
+        (w as f32, h as f32)
     }
 
     pub fn viewport(&self) -> Matrix4<f32> {
@@ -296,10 +291,9 @@ impl<S> Canvas<S> where S: Surface {
     pub fn scissor<B>(&self, bounds: B) -> Rect where B: Into<[f32; 4]> {
         let [x, y, w, h] = bounds.into();
         let (_, canvas_h) = self.dimensions();
-        let dpi = self.dpi();
         Rect {
-            left: (x * dpi).round() as u32, bottom: ((canvas_h - (y + h)) * dpi).round() as u32,
-            width: (w * dpi).round() as u32, height: (h * dpi).round() as u32
+            left: x.round() as u32, bottom: (canvas_h - (y + h)).round() as u32,
+            width: w.round() as u32, height: h.round() as u32
         }
     }
 
