@@ -273,7 +273,7 @@ impl FontManager {
         let texture = self.get_or_load_texture(params.size, Self::supported_chars());
         let text = TextDisplay::new(&self.system, &*texture, text);
         let em = params.size as f32 / 2.0;
-        (text.get_width() * em, text.get_height() * em * 2.0)
+        (text.get_width() * em, text.get_height() * em)
     }
 }
 

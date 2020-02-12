@@ -299,11 +299,10 @@ impl<S> Widget<S> for Button where S: Surface {
 
     fn draw(&self, canvas: &mut Canvas<S>, partial_ticks: f32) {
         let (x, y, w, h) = Widget::<S>::get_bounds(self);
-        let (text_w, text_h) = canvas.get_text_size(&self.label, &Default::default());
         let bounds = [x, y, w, h];
         let background = if self.hover { &self.background_hover } else { &self.background_normal };
         background.draw(canvas, bounds, partial_ticks);
-        canvas.text(&self.label, x + w / 2.0, y + h / 2.0, &FontParameters {
+        canvas.text(&self.label, x + w / 2.0, y, &FontParameters {
             color: [1.0; 4],
             align_horizontal: TextAlignHorizontal::Center,
             align_vertical: TextAlignVertical::Center,
@@ -458,10 +457,12 @@ impl<S> Widget<S> for TextField where S: Surface {
             } else {
                 text.pop();
             }
-            text_w = canvas.get_text_size(&text, &Default::default()).0;
+            let (w, _) = canvas.get_text_size(&text, &Default::default());
+            text_w = w;
         }
         let font_params = FontParameters {
             color: if self.value.is_empty() { [0.2, 0.2, 0.2, 1.0] } else { [1.0; 4] },
+            align_horizontal: TextAlignHorizontal::Center,
             align_vertical: TextAlignVertical::Center,
             .. Default::default()
         };
