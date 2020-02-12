@@ -10,6 +10,7 @@ use cgmath::{Matrix4, Point3, Transform};
 use crate::font::{FontManager, FontParameters};
 use crate::shader::ShaderManager;
 use crate::texture::TextureManager;
+use winit::dpi::LogicalSize;
 
 pub struct DrawBuffer {
     capacity: usize,
@@ -279,8 +280,13 @@ impl<S> Canvas<S> where S: Surface {
     }
 
     pub fn dimensions(&self) -> (f32, f32) {
+        let factor = self.scale_factor();
         let (w, h) = self.target.get_dimensions();
-        (w as f32, h as f32)
+        (w as f32 / factor, h as f32 / factor)
+    }
+
+    pub fn scale_factor(&self) -> f32 {
+        self.display.gl_window().window().scale_factor() as f32
     }
 
     pub fn viewport(&self) -> Matrix4<f32> {
@@ -291,9 +297,10 @@ impl<S> Canvas<S> where S: Surface {
     pub fn scissor<B>(&self, bounds: B) -> Rect where B: Into<[f32; 4]> {
         let [x, y, w, h] = bounds.into();
         let (_, canvas_h) = self.dimensions();
+        let factor = self.scale_factor();
         Rect {
-            left: x.round() as u32, bottom: (canvas_h - (y + h)).round() as u32,
-            width: w.round() as u32, height: h.round() as u32
+            left: (x * factor).round() as u32, bottom: ((canvas_h - (y + h)) * factor).round() as u32,
+            width: (w * factor).round() as u32, height: (h * factor).round() as u32
         }
     }
 
