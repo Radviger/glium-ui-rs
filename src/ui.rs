@@ -179,6 +179,36 @@ pub trait Widget<S> where S: Surface {
     fn draw(&self, canvas: &mut Canvas<S>, partial_ticks: f32) where S: Surface;
 }
 
+#[derive(Clone)]
+pub enum Background {
+    Texture(String),
+    Color([f32; 4])
+}
+
+impl Background {
+    pub fn draw<S>(&self, canvas: &mut Canvas<S>, bounds: [f32; 4], partial_ticks: f32) where S: Surface {
+        let viewport: [[f32; 4]; 4] = canvas.viewport().into();
+        let uniforms = uniform! {
+            mat: viewport
+        };
+        let params = DrawParameters {
+            blend: Blend::alpha_blending(),
+            .. Default::default()
+        };
+        match self {
+            Background::Texture(texture) => {
+                let texture = canvas.textures().borrow().get(texture);
+                let program = canvas.shaders().borrow().textured();
+                canvas.textured_rect(bounds, [1.0; 4], &program, &uniforms, &params);
+            },
+            Background::Color(color) => {
+                let program = canvas.shaders().borrow().default();
+                canvas.rect(bounds, *color, &program, &uniforms, &params);
+            },
+        }
+    }
+}
+
 pub struct Button {
     id: String,
     label: String,
@@ -186,7 +216,8 @@ pub struct Button {
     pressed: bool,
     hover: bool,
     focused: bool,
-    color: [f32; 4]
+    background_normal: Background,
+    background_hover: Background
 }
 
 impl<S> Widget<S> for Button where S: Surface {
@@ -266,23 +297,8 @@ impl<S> Widget<S> for Button where S: Surface {
         let (x, y, w, h) = Widget::<S>::get_bounds(self);
         let (text_w, text_h) = canvas.get_text_size(&self.label, &Default::default());
         let bounds = [x, y, w, h];
-        let default_program = canvas.shaders().borrow().default();
-        let viewport: [[f32; 4]; 4] = canvas.viewport().into();
-        let uniforms = uniform! {
-            mat: viewport
-        };
-        let params = DrawParameters {
-            blend: Blend::alpha_blending(),
-            .. Default::default()
-        };
-        let color = if self.hover {
-            let [r, g, b, a] = self.color;
-            [(r + 0.2).min(1.0), (g + 0.2).min(1.0), (b + 0.2).min(1.0), a]
-        } else {
-            self.color
-        };
-        canvas.rect(bounds, color, &default_program, &uniforms, &params);
-        canvas.rect([x, y + h - 3.0, w, 3.0], [0.0, 0.0, 0.0, 0.5], &default_program, &uniforms, &params);
+        let background = if self.hover { &self.background_hover } else { &self.background_normal };
+        background.draw(canvas, bounds, partial_ticks);
         canvas.text(&self.label, x + w / 2.0, y + 4.0, TextAlign::Center, &FontParameters {
             color: [1.0; 4],
             .. Default::default()
@@ -291,8 +307,9 @@ impl<S> Widget<S> for Button where S: Surface {
 }
 
 impl Button {
-    pub fn new<I, T, C>(id: I, label: T, x: f32, y: f32, w: f32, h: f32, color: C) -> Button
-        where I: Into<String>, T: Into<String>, C: Into<[f32; 4]> {
+    pub fn new<I, T>(id: I, label: T, x: f32, y: f32, w: f32, h: f32, background_normal: Background,
+                     background_hover: Option<Background>) -> Button
+        where I: Into<String>, T: Into<String> {
 
         Button {
             id: id.into(),
@@ -301,7 +318,8 @@ impl Button {
             pressed: false,
             hover: false,
             focused: false,
-            color: color.into()
+            background_hover: background_hover.unwrap_or_else(|| background_normal.clone()),
+            background_normal
         }
     }
 }
@@ -651,7 +669,8 @@ impl WindowListener for Notification {
         let (w, h) = self.size;
 
         self.widgets.add(Button::new("dispose_btn",
-                                     "Ок", w as f32 / 2.0 - 40.0, h as f32 - 40.0, 80.0, 30.0, [0.3, 0.3, 0.3, 0.8]
+                                     "Ок", w as f32 / 2.0 - 40.0, h as f32 - 40.0, 80.0, 30.0,
+            Background::Color([0.3, 0.3, 0.3, 0.8]), None
         ));
     }
 
@@ -771,7 +790,8 @@ impl WindowListener for Query {
         ));
 
         self.widgets.add(Button::new("dispose_btn",
-                                     "Ок", w as f32 / 2.0 - 40.0, h as f32 - 40.0, 80.0, 30.0, [0.3, 0.3, 0.3, 0.8]
+                                     "Ок", w as f32 / 2.0 - 40.0, h as f32 - 40.0, 80.0, 30.0,
+            Background::Color([0.3, 0.3, 0.3, 0.8]), None
         ));
     }
 
