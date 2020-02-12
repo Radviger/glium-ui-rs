@@ -303,9 +303,9 @@ impl<S> Widget<S> for Button where S: Surface {
         let bounds = [x, y, w, h];
         let background = if self.hover { &self.background_hover } else { &self.background_normal };
         background.draw(canvas, bounds, partial_ticks);
-        canvas.text(&self.label, x + w / 2.0, y + 4.0, &FontParameters {
+        canvas.text(&self.label, x + w / 2.0, y + h / 2.0, &FontParameters {
             color: [1.0; 4],
-            align_horizontal: TextAlignHorizontal::Left,
+            align_horizontal: TextAlignHorizontal::Center,
             align_vertical: TextAlignVertical::Center,
             .. Default::default()
         });
