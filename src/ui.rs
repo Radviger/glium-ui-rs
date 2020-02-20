@@ -463,7 +463,7 @@ impl<S> Widget<S> for TextField where S: Surface {
             align_vertical: TextAlignVertical::Center,
             .. Default::default()
         };
-        canvas.text(text, x + 5.0, y + 4.0, &font_params);
+        canvas.text(text, x + 5.0, y + h / 4.0, &font_params);
     }
 }
 
