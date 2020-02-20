@@ -13,6 +13,7 @@ use std::str::FromStr;
 use cgmath::{Vector2, InnerSpace, MetricSpace};
 use glium::index::PrimitiveType;
 use std::any::Any;
+use std::time::Instant;
 
 pub struct Widgets<S> where S: Surface {
     widgets: Vec<Box<dyn Widget<S>>>,
@@ -339,7 +340,8 @@ pub struct TextField {
     mask: Option<Box<TextMask>>,
     focused: bool,
     bounds: (f32, f32, f32, f32),
-    background: Background
+    background: Background,
+    last_input_changed: Instant
 }
 
 impl<S> Widget<S> for TextField where S: Surface {
@@ -394,18 +396,23 @@ impl<S> Widget<S> for TextField where S: Surface {
                 Some(VirtualKeyCode::Back) => {
                     if !self.value.is_empty() {
                         self.value.pop();
+                        self.last_input_changed = Instant::now();
                         return vec![WidgetEvent::TextValueChanged {
                             id: Widget::<S>::get_id(self).clone(), value: self.value.clone()
                         }];
                     }
                 },
                 Some(VirtualKeyCode::Escape) => { self.focused = false; },
-                Some(VirtualKeyCode::Delete) => { self.value.clear(); },
+                Some(VirtualKeyCode::Delete) => {
+                    self.value.clear();
+                    self.last_input_changed = Instant::now();
+                },
                 Some(VirtualKeyCode::V) => {
                     if modifiers.ctrl() {
                         let mut clipboard: ClipboardContext = ClipboardProvider::new().expect("Failed to access clipboard");
                         let contents = clipboard.get_contents().expect("Failed to get clipboard contents");
                         self.value.push_str(&contents);
+                        self.last_input_changed = Instant::now();
                         return vec![WidgetEvent::TextValueChanged {
                             id: Widget::<S>::get_id(self).clone(), value: self.value.clone()
                         }];
@@ -425,6 +432,7 @@ impl<S> Widget<S> for TextField where S: Surface {
                 }
             }
             self.value.push(ch);
+            self.last_input_changed = Instant::now();
             return vec![WidgetEvent::TextValueChanged {
                 id: Widget::<S>::get_id(self).clone(), value: self.value.clone()
             }];
@@ -464,6 +472,9 @@ impl<S> Widget<S> for TextField where S: Surface {
             .. Default::default()
         };
         canvas.text(text, x + 5.0, y + h / 4.0, &font_params);
+        if Instant::now().duration_since(self.last_input_changed).subsec_millis() == 500 {
+            canvas.rect([x + text_w + 0.5, y + 2.0, 4.0, h - 4.0], [1.0; 4], &default_program, &uniforms, &params);
+        }
     }
 }
 
@@ -480,7 +491,8 @@ impl TextField {
             mask,
             focused: false,
             bounds: (x, y, w, h),
-            background
+            background,
+            last_input_changed: Instant::now()
         }
     }
 
