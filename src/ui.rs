@@ -473,7 +473,8 @@ impl<S> Widget<S> for TextField where S: Surface {
         };
         canvas.text(text, x + 5.0, y + h / 4.0, &font_params);
         if self.focused && Instant::now().duration_since(self.last_input_changed).subsec_millis() < 500 {
-            canvas.rect([x + text_w + 2.0, y + 2.0, 2.0, h - 4.0], [1.0; 4], &default_program, &uniforms, &params);
+            let offset = if self.value.is_empty() { 0.0 } else { text_w } + 4.0;
+            canvas.rect([x + offset, y + 2.0, 2.0, h - 4.0], [1.0; 4], &default_program, &uniforms, &params);
         }
     }
 }
