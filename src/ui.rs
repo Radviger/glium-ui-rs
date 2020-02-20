@@ -472,8 +472,8 @@ impl<S> Widget<S> for TextField where S: Surface {
             .. Default::default()
         };
         canvas.text(text, x + 5.0, y + h / 4.0, &font_params);
-        if Instant::now().duration_since(self.last_input_changed).subsec_millis() < 500 {
-            canvas.rect([x + text_w + 0.5, y + 2.0, 4.0, h - 4.0], [1.0; 4], &default_program, &uniforms, &params);
+        if self.focused && Instant::now().duration_since(self.last_input_changed).subsec_millis() < 500 {
+            canvas.rect([x + text_w + 2.0, y + 2.0, 2.0, h - 4.0], [1.0; 4], &default_program, &uniforms, &params);
         }
     }
 }
