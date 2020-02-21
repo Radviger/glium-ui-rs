@@ -5,7 +5,7 @@ authors = ["radviger@gmail.com"]
 edition = "2018"
 
 [dependencies]
-glium = "0.26.0"
+glium = { git = "https://github.com/Radviger/glium" }
 rusttype = "0.8.2"
 cgmath = "0.17.0"
 image = "0.23.0"
