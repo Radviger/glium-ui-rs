@@ -286,7 +286,7 @@ impl<S> Canvas<S> where S: Surface {
     }
 
     pub fn scale_factor(&self) -> f32 {
-        self.display.gl_window().window().scale_factor() as f32
+        self.display.gl_window().window().get_hidpi_factor() as f32
     }
 
     pub fn viewport(&self) -> Matrix4<f32> {
