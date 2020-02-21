@@ -3,18 +3,22 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::time::{SystemTime, Instant, Duration};
 use image::{DynamicImage, GenericImageView};
-use winit::{WindowBuilder, Icon};
+use winit::window::{WindowBuilder, Icon};
 use crate::shader::ShaderManager;
 use crate::font::FontManager;
 use crate::texture::TextureManager;
 use crate::render::Canvas;
-use winit::{Event, WindowEvent, KeyboardInput, MouseButton, MouseScrollDelta, ElementState};
-use winit::{EventsLoop, ControlFlow};
+use winit::event::{Event, WindowEvent, KeyboardInput, MouseButton, MouseScrollDelta, ElementState, StartCause};
+use winit::event_loop::{EventLoop, ControlFlow};
 use glium::backend::glutin::glutin::ContextBuilder;
+use winit::monitor::MonitorHandle;
 use std::collections::VecDeque;
+use winit::platform::desktop::EventLoopExtDesktop;
+#[cfg(windows)]
+use winit::platform::windows::EventLoopExtWindows;
 #[cfg(not(windows))]
 use winit::platform::unix::EventLoopExtUnix;
-use winit::dpi::{LogicalSize, PhysicalSize, LogicalPosition};
+use winit::dpi::{LogicalSize, PhysicalSize, Position, LogicalPosition};
 
 pub struct Window;
 
@@ -25,18 +29,18 @@ impl Window {
 
         let (window_w, window_h) = size.into();
 
-        let mut event_loop = EventsLoop::new();
+        let mut event_loop = EventLoop::new_any_thread();
         let mut wb = WindowBuilder::new()
             .with_decorations(decorated)
             .with_title(title)
             .with_resizable(resizable) //Stupid winit warning about Xfce bug
             .with_always_on_top(top)
-            .with_visibility(false)
-            .with_dimensions(LogicalSize::new(window_w as f64, window_h as f64));
+            .with_visible(false)
+            .with_inner_size(LogicalSize::new(window_w, window_h));
 
         if cfg!(not(windows)) && !resizable {
-            wb = wb.with_min_dimensions(LogicalSize::new(window_w as f64, window_h as f64))
-                .with_max_dimensions(LogicalSize::new(window_w as f64, window_h as f64));
+            wb = wb.with_min_inner_size(LogicalSize::new(window_w, window_h))
+                .with_max_inner_size(LogicalSize::new(window_w, window_h));
         }
 
         if let Some(icon) = icon {
@@ -53,8 +57,8 @@ impl Window {
         let display = Display::new(wb, cb, &event_loop)
             .expect("Display creation failed");
 
-        let monitor = display.gl_window().window().get_current_monitor();
-        let (monitor_w, monitor_h) = Into::<(f64, f64)>::into(monitor.get_dimensions());
+        let monitor: MonitorHandle = display.gl_window().window().current_monitor();
+        let (monitor_w, monitor_h) = Into::<(f64, f64)>::into(monitor.size());
 
         let shaders = Rc::new(RefCell::new(ShaderManager::new(&display)));
         let fonts = Rc::new(RefCell::new(FontManager::new(&display)));
@@ -62,10 +66,10 @@ impl Window {
 
         {
             let gl_window = display.gl_window();
-            let window: &winit::Window = gl_window.window();
+            let window: &winit::window::Window = gl_window.window();
             listener.load_resources(&display, shaders.clone(), fonts.clone(), textures.clone());
-            window.show();
-            window.set_position(LogicalPosition::new(
+            window.set_visible(true);
+            window.set_outer_position(LogicalPosition::new(
                 monitor_w / 2.0 - window_w as f64 / 2.0,
                 monitor_h / 2.0 - window_h as f64 / 2.0
             ));
@@ -78,11 +82,12 @@ impl Window {
 
         listener.on_created(&display);
 
-        event_loop.run_forever(move |event| {
+        event_loop.run_return(move |event: Event<()>, _, control_flow| {
             if listener.is_closed(&display) {
-                return ControlFlow::Break;
+                *control_flow = ControlFlow::Exit;
+                return;
             }
-            /*let new_frame = match event {
+            let new_frame = match event {
                 Event::NewEvents(cause) => {
                     match cause {
                         StartCause::ResumeTimeReached { .. } | StartCause::Init => true,
@@ -90,12 +95,13 @@ impl Window {
                     }
                 },
                 other => {
-                    if let Some(event) = other.to_static() {*/
+                    if let Some(event) = other.to_static() {
                         events.push_back(event);
-                    /*}
+                    }
                     false
                 }
-            };*/
+            };
+            if new_frame {
                 let frame = display.draw();
 
                 let (w, h) = frame.get_dimensions();
@@ -145,7 +151,8 @@ impl Window {
 
                 last_frame_time = SystemTime::now();
                 next_frame_time = Instant::now() + Duration::from_secs_f32(1.0 / 60.0);
-            ControlFlow::Continue
+            }
+            *control_flow = ControlFlow::WaitUntil(next_frame_time);
         });
     }
 }

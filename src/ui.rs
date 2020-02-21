@@ -1,6 +1,6 @@
 use glium::{Surface, DrawParameters, Blend, Display, Frame};
-use glium::glutin::{MouseButton, ElementState, KeyboardInput, MouseScrollDelta, VirtualKeyCode};
-use glium::glutin::{MouseCursor as CursorIcon};
+use glium::glutin::event::{MouseButton, ElementState, KeyboardInput, MouseScrollDelta, VirtualKeyCode};
+use glium::glutin::window::CursorIcon;
 
 use clipboard::{ClipboardProvider, ClipboardContext};
 
@@ -408,7 +408,7 @@ impl<S> Widget<S> for TextField where S: Surface {
                     self.last_input_changed = Instant::now();
                 },
                 Some(VirtualKeyCode::V) => {
-                    if modifiers.ctrl {
+                    if modifiers.ctrl() {
                         let mut clipboard: ClipboardContext = ClipboardProvider::new().expect("Failed to access clipboard");
                         let contents = clipboard.get_contents().expect("Failed to get clipboard contents");
                         self.value.push_str(&contents);
@@ -645,6 +645,100 @@ impl ScrollBar {
 
     pub fn get_value(&self) -> f32 {
         self.value
+    }
+}
+
+struct Notification {
+    size: (u32, u32),
+    widgets: Widgets<Frame>,
+    message: String,
+    visible: bool
+}
+
+pub fn notification<S, T, M>(size: S, title: T, message: M, icon: Option<DynamicImage>, tps: u32) -> JoinHandle<()>
+    where S: Into<(u32, u32)>, T: Into<String>, M: Into<String> {
+
+    let (w, h) = size.into();
+    let title = title.into();
+    let message = message.into();
+
+    std::thread::Builder::new().name("gui-notification".to_string()).spawn(move || {
+        let mut dialog = Notification {
+            size: (w, h),
+            widgets: Widgets::new(),
+            message,
+            visible: true
+        };
+
+        Window::show((w, h), title, icon, true, false, true, true, &mut dialog, tps)
+    }).expect("thread spawning failed")
+}
+
+impl WindowListener for Notification {
+    fn is_closed(&self, display: &Display) -> bool {
+        self.visible
+    }
+
+    fn on_created(&mut self, display: &Display) {
+        let (w, h) = self.size;
+
+        self.widgets.add(Button::new("dispose_btn",
+                                     "Ок", w as f32 / 2.0 - 40.0, h as f32 - 40.0, 80.0, 30.0,
+            Background::Color([0.3, 0.3, 0.3, 0.8]), None
+        ));
+    }
+
+    fn on_frame_draw(&self, canvas: &mut Canvas<Frame>, mouse_pos: (f32, f32), partial_ticks: f32) {
+        canvas.clear((1.0, 1.0, 1.0, 1.0), 1.0);
+        canvas.text(&self.message, self.size.0 as f32 / 2.0, 10.0, &Default::default());
+        self.widgets.draw(canvas, partial_ticks);
+    }
+
+    fn on_close_requested(&mut self, display: &Display, dimensions: (f32, f32)) {
+        self.visible = false;
+    }
+
+    fn on_keyboard_char(&mut self, display: &Display, dimensions: (f32, f32), ch: char) {
+        for e in self.widgets.on_keyboard_char(display, ch) {
+            self.on_widget_event(display, e);
+        }
+    }
+
+    fn on_keyboard_key(&mut self, display: &Display, dimensions: (f32, f32), input: KeyboardInput) {
+        for e in self.widgets.on_keyboard_key(display, input) {
+            self.on_widget_event(display, e);
+        }
+    }
+
+    fn on_mouse_button(&mut self, display: &Display, dimensions: (f32, f32), button: MouseButton, state: ElementState, pos: (f32, f32)) {
+        for e in self.widgets.on_mouse_button(display, button, state, pos) {
+            self.on_widget_event(display, e);
+        }
+    }
+
+    fn on_mouse_wheel(&mut self, display: &Display, dimensions: (f32, f32), delta: MouseScrollDelta) {
+        for e in self.widgets.on_mouse_wheel(display, delta) {
+            self.on_widget_event(display, e);
+        }
+    }
+
+    fn on_mouse_move(&mut self, display: &Display, dimensions: (f32, f32), pos: (f32, f32)) {
+        for e in self.widgets.on_mouse_move(display, pos) {
+            self.on_widget_event(display, e);
+        }
+    }
+}
+
+impl Notification {
+    fn on_widget_event(&mut self, display: &Display, event: WidgetEvent) {
+        match event {
+            WidgetEvent::ButtonClicked { id } => {
+                if id == "dispose_btn" {
+                    self.visible = false;
+                }
+            },
+            _ => {}
+        }
     }
 }
 
