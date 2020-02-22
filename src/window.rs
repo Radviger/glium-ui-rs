@@ -29,7 +29,7 @@ impl Window {
 
         let (window_w, window_h) = size.into();
 
-        let mut event_loop = EventLoop::new_any_thread();
+        let mut event_loop = EventLoop::new_dpi_unaware_any_thread();
         let mut wb = WindowBuilder::new()
             .with_decorations(decorated)
             .with_title(title)
