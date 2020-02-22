@@ -375,6 +375,8 @@ impl<S> Canvas<S> where S: Surface {
         let uniforms = uniform! {
             mat: Into::<[[f32; 4]; 4]>::into(mat),
             tex: texture.sampled()
+                .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
+                .minify_filter(glium::uniforms::MinifySamplerFilter::NearestMipmapNearest)
         };
 
         self.textured_rect(bounds, color, program, &uniforms, &params);

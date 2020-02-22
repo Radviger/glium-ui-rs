@@ -200,6 +200,8 @@ impl Background {
                 let uniforms = uniform! {
                     mat: viewport,
                     tex: texture.sampled()
+                        .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
+                        .minify_filter(glium::uniforms::MinifySamplerFilter::NearestMipmapNearest)
                 };
                 canvas.textured_rect(bounds, [1.0; 4], &program, &uniforms, &params);
             },
