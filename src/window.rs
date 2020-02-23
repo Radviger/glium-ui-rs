@@ -14,13 +14,23 @@ use glium::backend::glutin::glutin::ContextBuilder;
 use winit::monitor::MonitorHandle;
 use std::collections::VecDeque;
 use winit::platform::desktop::EventLoopExtDesktop;
-#[cfg(windows)]
-use winit::platform::windows::EventLoopExtWindows;
-#[cfg(not(windows))]
-use winit::platform::unix::EventLoopExtUnix;
+
 use winit::dpi::{LogicalSize, PhysicalSize, Position, LogicalPosition};
 
 pub struct Window;
+
+#[cfg(windows)]
+fn new_loop<T>() -> EventLoop<T> {
+    use winit::platform::windows::EventLoopExtWindows;
+    EventLoop::new_dpi_unaware_any_thread()
+}
+
+
+#[cfg(not(windows))]
+fn new_loop<T>() -> EventLoop<T> {
+    use winit::platform::unix::EventLoopExtUnix;
+    EventLoop::new_any_thread()
+}
 
 impl Window {
     pub fn show<L, S, T>(size: S, title: T, icon: Option<DynamicImage>,
@@ -29,7 +39,7 @@ impl Window {
 
         let (window_w, window_h) = size.into();
 
-        let mut event_loop = EventLoop::new_dpi_unaware_any_thread();
+        let mut event_loop = new_loop();
         let mut wb = WindowBuilder::new()
             .with_decorations(decorated)
             .with_title(title)
