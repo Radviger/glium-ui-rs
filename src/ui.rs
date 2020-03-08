@@ -197,6 +197,11 @@ impl Background {
             Background::Texture(texture) => {
                 let texture = canvas.textures().borrow().get(texture);
                 let program = canvas.shaders().borrow().textured();
+                let viewport: [[f32; 4]; 4] = canvas.viewport().into();
+                let params = DrawParameters {
+                    blend: Blend::alpha_blending(),
+                    .. Default::default()
+                };
                 let uniforms = uniform! {
                     mat: viewport,
                     tex: texture.sampled()
@@ -304,11 +309,15 @@ impl<S> Widget<S> for Button where S: Surface {
     fn draw(&self, canvas: &mut Canvas<S>, partial_ticks: f32) {
         let (x, y, w, h) = Widget::<S>::get_bounds(self);
         let bounds = [x, y, w, h];
-        let background = if self.background;
-        background.draw(canvas, bounds, self.color, partial_ticks);
+        self.background.draw(canvas, bounds, self.color, partial_ticks);
         if let Some(icon) = self.icon.as_ref() {
             let texture = canvas.textures().borrow().get(icon);
             let program = canvas.shaders().borrow().textured();
+            let viewport: [[f32; 4]; 4] = canvas.viewport().into();
+            let params = DrawParameters {
+                blend: Blend::alpha_blending(),
+                .. Default::default()
+            };
             let uniforms = uniform! {
                 mat: viewport,
                 tex: texture.sampled()
@@ -329,7 +338,7 @@ impl<S> Widget<S> for Button where S: Surface {
 
 impl Button {
     pub fn new<I, T, C, IC>(id: I, label: T, x: f32, y: f32, w: f32, h: f32, background: Background,
-                            color: Option<Background>, icon: Option<IC>) -> Button
+                            color: Option<C>, icon: Option<IC>) -> Button
         where I: Into<String>, T: Into<String>, C: Into<[f32;4]>, IC: Into<String> {
 
         Button {
@@ -469,7 +478,7 @@ impl<S> Widget<S> for TextField where S: Surface {
             line_width: Some(1.0), //FIXME 1.2
             .. Default::default()
         };
-        self.background.draw(canvas, bounds, partial_ticks);
+        self.background.draw(canvas, bounds, [1.0; 4], partial_ticks);
         let mut text = self.get_display_text();
         let (mut text_w, text_h) = canvas.get_text_size(&text, &Default::default());
         while text_w > w - 10.0 {
@@ -661,100 +670,6 @@ impl ScrollBar {
 
     pub fn get_value(&self) -> f32 {
         self.value
-    }
-}
-
-struct Notification {
-    size: (u32, u32),
-    widgets: Widgets<Frame>,
-    message: String,
-    visible: bool
-}
-
-pub fn notification<S, T, M>(size: S, title: T, message: M, icon: Option<DynamicImage>, tps: u32) -> JoinHandle<()>
-    where S: Into<(u32, u32)>, T: Into<String>, M: Into<String> {
-
-    let (w, h) = size.into();
-    let title = title.into();
-    let message = message.into();
-
-    std::thread::Builder::new().name("gui-notification".to_string()).spawn(move || {
-        let mut dialog = Notification {
-            size: (w, h),
-            widgets: Widgets::new(),
-            message,
-            visible: true
-        };
-
-        Window::show((w, h), title, icon, true, false, true, true, &mut dialog, tps)
-    }).expect("thread spawning failed")
-}
-
-impl WindowListener for Notification {
-    fn is_closed(&self, display: &Display) -> bool {
-        self.visible
-    }
-
-    fn on_created(&mut self, display: &Display) {
-        let (w, h) = self.size;
-
-        self.widgets.add(Button::new("dispose_btn",
-                                     "Ок", w as f32 / 2.0 - 40.0, h as f32 - 40.0, 80.0, 30.0,
-            Background::Color([0.3, 0.3, 0.3, 0.8]), None
-        ));
-    }
-
-    fn on_frame_draw(&self, canvas: &mut Canvas<Frame>, mouse_pos: (f32, f32), partial_ticks: f32) {
-        canvas.clear((1.0, 1.0, 1.0, 1.0), 1.0);
-        canvas.text(&self.message, self.size.0 as f32 / 2.0, 10.0, &Default::default());
-        self.widgets.draw(canvas, partial_ticks);
-    }
-
-    fn on_close_requested(&mut self, display: &Display, dimensions: (f32, f32)) {
-        self.visible = false;
-    }
-
-    fn on_keyboard_char(&mut self, display: &Display, dimensions: (f32, f32), ch: char) {
-        for e in self.widgets.on_keyboard_char(display, ch) {
-            self.on_widget_event(display, e);
-        }
-    }
-
-    fn on_keyboard_key(&mut self, display: &Display, dimensions: (f32, f32), input: KeyboardInput) {
-        for e in self.widgets.on_keyboard_key(display, input) {
-            self.on_widget_event(display, e);
-        }
-    }
-
-    fn on_mouse_button(&mut self, display: &Display, dimensions: (f32, f32), button: MouseButton, state: ElementState, pos: (f32, f32)) {
-        for e in self.widgets.on_mouse_button(display, button, state, pos) {
-            self.on_widget_event(display, e);
-        }
-    }
-
-    fn on_mouse_wheel(&mut self, display: &Display, dimensions: (f32, f32), delta: MouseScrollDelta) {
-        for e in self.widgets.on_mouse_wheel(display, delta) {
-            self.on_widget_event(display, e);
-        }
-    }
-
-    fn on_mouse_move(&mut self, display: &Display, dimensions: (f32, f32), pos: (f32, f32)) {
-        for e in self.widgets.on_mouse_move(display, pos) {
-            self.on_widget_event(display, e);
-        }
-    }
-}
-
-impl Notification {
-    fn on_widget_event(&mut self, display: &Display, event: WidgetEvent) {
-        match event {
-            WidgetEvent::ButtonClicked { id } => {
-                if id == "dispose_btn" {
-                    self.visible = false;
-                }
-            },
-            _ => {}
-        }
     }
 }
 
