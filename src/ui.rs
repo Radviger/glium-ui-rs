@@ -187,7 +187,7 @@ pub enum Background {
 }
 
 impl Background {
-    pub fn draw<S>(&self, canvas: &mut Canvas<S>, bounds: [f32; 4], partial_ticks: f32) where S: Surface {
+    pub fn draw<S>(&self, canvas: &mut Canvas<S>, bounds: [f32; 4], color: [f32;4], partial_ticks: f32) where S: Surface {
         let viewport: [[f32; 4]; 4] = canvas.viewport().into();
         let params = DrawParameters {
             blend: Blend::alpha_blending(),
@@ -203,7 +203,7 @@ impl Background {
                         .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
                         .minify_filter(glium::uniforms::MinifySamplerFilter::NearestMipmapNearest)
                 };
-                canvas.textured_rect(bounds, [1.0; 4], &program, &uniforms, &params);
+                canvas.textured_rect(bounds, color, &program, &uniforms, &params);
             },
             Background::Color(color) => {
                 let program = canvas.shaders().borrow().default();
@@ -223,8 +223,9 @@ pub struct Button {
     pressed: bool,
     hover: bool,
     focused: bool,
-    background_normal: Background,
-    background_hover: Background
+    background: Background,
+    color: [f32; 4],
+    icon: Option<String>
 }
 
 impl<S> Widget<S> for Button where S: Surface {
@@ -303,8 +304,20 @@ impl<S> Widget<S> for Button where S: Surface {
     fn draw(&self, canvas: &mut Canvas<S>, partial_ticks: f32) {
         let (x, y, w, h) = Widget::<S>::get_bounds(self);
         let bounds = [x, y, w, h];
-        let background = if self.hover { &self.background_hover } else { &self.background_normal };
-        background.draw(canvas, bounds, partial_ticks);
+        let background = if self.background;
+        background.draw(canvas, bounds, self.color, partial_ticks);
+        if let Some(icon) = self.icon.as_ref() {
+            let texture = canvas.textures().borrow().get(icon);
+            let program = canvas.shaders().borrow().textured();
+            let uniforms = uniform! {
+                mat: viewport,
+                tex: texture.sampled()
+                    .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
+                    .minify_filter(glium::uniforms::MinifySamplerFilter::NearestMipmapNearest)
+            };
+            let size = w.min(h);
+            canvas.textured_rect([x, y, size, size], self.color, &program, &uniforms, &params);
+        }
         canvas.text(&self.label, x + w / 2.0, y + h / 4.0, &FontParameters {
             color: [1.0; 4],
             align_horizontal: TextAlignHorizontal::Center,
@@ -315,9 +328,9 @@ impl<S> Widget<S> for Button where S: Surface {
 }
 
 impl Button {
-    pub fn new<I, T>(id: I, label: T, x: f32, y: f32, w: f32, h: f32, background_normal: Background,
-                     background_hover: Option<Background>) -> Button
-        where I: Into<String>, T: Into<String> {
+    pub fn new<I, T, C, IC>(id: I, label: T, x: f32, y: f32, w: f32, h: f32, background: Background,
+                            color: Option<Background>, icon: Option<IC>) -> Button
+        where I: Into<String>, T: Into<String>, C: Into<[f32;4]>, IC: Into<String> {
 
         Button {
             id: id.into(),
@@ -326,8 +339,9 @@ impl Button {
             pressed: false,
             hover: false,
             focused: false,
-            background_hover: background_hover.unwrap_or_else(|| background_normal.clone()),
-            background_normal
+            background,
+            color: color.map(|c|c.into()).unwrap_or([1.0; 4]),
+            icon: icon.map(|i|i.into())
         }
     }
 }
