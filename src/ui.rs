@@ -337,9 +337,9 @@ impl<S> Widget<S> for Button where S: Surface {
 }
 
 impl Button {
-    pub fn new<I, T, C, IC>(id: I, label: T, x: f32, y: f32, w: f32, h: f32, background: Background,
-                            color: Option<C>, icon: Option<IC>) -> Button
-        where I: Into<String>, T: Into<String>, C: Into<[f32;4]>, IC: Into<String> {
+    pub fn new<I, T>(id: I, label: T, x: f32, y: f32, w: f32, h: f32, background: Background,
+                     color: Option<[f32; 4]>, icon: Option<&str>) -> Button
+        where I: Into<String>, T: Into<String> {
 
         Button {
             id: id.into(),
@@ -349,8 +349,8 @@ impl Button {
             hover: false,
             focused: false,
             background,
-            color: color.map(|c|c.into()).unwrap_or([1.0; 4]),
-            icon: icon.map(|i|i.into())
+            color: color.unwrap_or([1.0; 4]),
+            icon: icon.map(|i|i.to_owned())
         }
     }
 }
