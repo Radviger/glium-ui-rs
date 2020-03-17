@@ -61,7 +61,7 @@ impl Window {
             ));
         }
         let cb = ContextBuilder::new()
-            .with_gl(GlRequest::Specific(Api::OpenGl, (3, 1)))
+            .with_gl(GlRequest::Specific(Api::OpenGl, (2, 1)))
             //.with_gl_robustness(Robustness::TryRobustNoResetNotification)
             //.with_gl_profile(GlProfile::Compatibility)
             //.with_multisampling(1)
