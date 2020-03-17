@@ -1,7 +1,7 @@
-#version 140
+#version 120
 
-in vec2 f_texture_uv;
-out vec4 out_color;
+attribute vec2 f_texture_uv;
+varying vec4 out_color;
 
 uniform vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform sampler2D tex;

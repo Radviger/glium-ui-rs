@@ -414,7 +414,7 @@ impl TextSystem {
         TextSystem {
             context: facade.get_context().clone(),
             program: program!(facade,
-                140 => {
+                120 => {
                     vertex: include_str!("resources/shaders/font.vsh"),
                     fragment: include_str!("resources/shaders/font.fsh")
                 }

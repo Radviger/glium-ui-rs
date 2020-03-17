@@ -1,16 +1,16 @@
-#version 150
+#version 120
 
 uniform mat4 mat;
 
-in vec3 pos;
-in vec3 normal;
-in vec4 color;
+attribute vec3 pos;
+attribute vec3 normal;
+attribute vec4 color;
 
-out vec3 f_normal;
-out vec4 f_color;
+varying vec3 f_normal;
+varying vec4 f_color;
 
 void main() {
     gl_Position = mat * vec4(pos, 1.0);
-    f_normal = transpose(inverse(mat3(mat))) * normal;
+    f_normal = vec4(normal, 1.0);
     f_color = color;
 }
