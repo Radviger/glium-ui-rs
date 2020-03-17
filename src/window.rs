@@ -62,12 +62,12 @@ impl Window {
         }
         let cb = ContextBuilder::new()
             .with_gl(GlRequest::Specific(Api::OpenGl, (3, 1)))
-            .with_gl_robustness(Robustness::TryRobustNoResetNotification)
-            .with_gl_profile(GlProfile::Compatibility)
-            .with_multisampling(1)
+            //.with_gl_robustness(Robustness::TryRobustNoResetNotification)
+            //.with_gl_profile(GlProfile::Compatibility)
+            //.with_multisampling(1)
             .with_depth_buffer(24)
-            .with_stencil_buffer(8)
-            .with_pixel_format(24, 0)
+            //.with_stencil_buffer(8)
+            //.with_pixel_format(24, 0)
             .with_vsync(vsync);
 
         let display = Display::new(wb, cb, &event_loop)
