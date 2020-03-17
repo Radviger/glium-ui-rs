@@ -1,7 +1,6 @@
 #version 120
 
-attribute vec2 f_texture_uv;
-varying vec4 out_color;
+varying vec2 f_texture_uv;
 
 uniform vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform sampler2D tex;
@@ -11,6 +10,6 @@ void main() {
     if (c.a <= 0.01) {
         discard;
     } else {
-        out_color = c;
+        gl_FragColor = c;
     }
 }
