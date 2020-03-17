@@ -69,6 +69,7 @@ impl Window {
             //.with_stencil_buffer(8)
             //.with_pixel_format(24, 0)
             .with_vsync(vsync)
+            .with_multisampling(0)
             .with_srgb(false);
 
         let display = Display::new(wb, cb, &event_loop)
