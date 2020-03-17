@@ -11,6 +11,6 @@ varying vec4 f_color;
 
 void main() {
     gl_Position = mat * vec4(pos, 1.0);
-    f_normal = vec4(normal, 1.0);
+    f_normal = normal;
     f_color = color;
 }
