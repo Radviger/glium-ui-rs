@@ -10,7 +10,7 @@ use crate::texture::TextureManager;
 use crate::render::Canvas;
 use winit::event::{Event, WindowEvent, KeyboardInput, MouseButton, MouseScrollDelta, ElementState, StartCause};
 use winit::event_loop::{EventLoop, ControlFlow};
-use glium::backend::glutin::glutin::ContextBuilder;
+use glium::backend::glutin::glutin::{ContextBuilder, GlRequest, Robustness, GlProfile};
 use winit::monitor::MonitorHandle;
 use std::collections::VecDeque;
 use winit::platform::desktop::EventLoopExtDesktop;
@@ -61,7 +61,13 @@ impl Window {
             ));
         }
         let cb = ContextBuilder::new()
+            .with_gl(GlRequest::Latest)
+            .with_gl_robustness(Robustness::TryRobustNoResetNotification)
+            .with_gl_profile(GlProfile::Core)
+            .with_multisampling(1)
             .with_depth_buffer(24)
+            .with_stencil_buffer(8)
+            .with_pixel_format(24, 0)
             .with_vsync(vsync);
 
         let display = Display::new(wb, cb, &event_loop)
