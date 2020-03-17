@@ -68,7 +68,8 @@ impl Window {
             .with_depth_buffer(24)
             //.with_stencil_buffer(8)
             //.with_pixel_format(24, 0)
-            .with_vsync(vsync);
+            .with_vsync(vsync)
+            .with_srgb(false);
 
         let display = Display::new(wb, cb, &event_loop)
             .expect("Display creation failed");
